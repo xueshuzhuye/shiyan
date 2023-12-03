@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>SageMathCell</title>
+    <script src="https://sagecell.sagemath.org/static/embedded_sagecell.js"></script>
+    <script>
+    sagecell.makeSagecell({inputLocation:  '#HPD',
+                           template:       sagecell.templates.minimal,
+                           linked: true,
+                           linkKey:"1",
+                           hide:["fullScreen"],
+                           evalButtonText: 'Activate'});
+    sagecell.makeSagecell({inputLocation: 'div.choice',
+                           linked: true,
+                           linkKey:"1",
+                           hide:["permalinkpermalink","output","done","sessionFiles","fullScreen"],
+                           evalButtonText: 'determined'});
+    sagecell.makeSagecell({inputLocation: 'div.compute',
+                           linked: true,
+                           linkKey:"1",
+                           hide:["fullScreen"],
+                           evalButtonText: 'Evaluate'});
+    </script>
+  </head>
+  <body>
+  <h1>hybrid pipe dream</h1>
+
+  <h2>Activate</h2>
+  Click the “Activate” button below to calculate hybrid pipe dream.
+    <div id="HPD"><script type="text/x-sage">
+def RC_piece(u,r): # return (d,l)
+    yield (r,u)
+    if (u == 0 and r!=0) or (u!=0 and r!=0 and u>r): 
+        yield (u,r)
+    return 
+
+def RC_row(uu,l=None,r=0): # return (dd,rec=[])
+    if len(uu)==0: 
+        yield ([],[r])
+        return
+    for (last_dd,rec) in RC_row(uu[1:],None,r): 
+        for (res_d,res_l) in RC_piece(uu[0],rec[0]): 
+            if l == None or l==res_l:
+                yield ([res_d]+last_dd,[res_l]+rec)
+    return
+def BPD_piece(u,l): # return (d,r)
+    if u==l==0:
+        yield (0,0)
+    elif u==0 and l !=0: 
+        yield (u,l)
+        yield (l,u)
+    elif l==0 and u !=0: 
+        yield (u,l)
+        yield (l,u)
+    elif l!=0 and u !=0 and u<l: 
+        yield (u,l)
+    return 
+
+def BPD_row(uu,r=None,l=0): # return (dd,rec=[])
+    if len(uu)==0: 
+        yield ([],[l])
+        return
+    for (last_dd,rec) in BPD_row(uu[:-1],None,l): 
+        for (res_d,res_r) in BPD_piece(uu[-1],rec[-1]): 
+            if r == None or r==res_r:
+                yield (last_dd+[res_d],rec+[res_r])
+    return
+def hPD(uu,OB_seq,ll=None,rr=None): # return (rec=[[],[]] of each row,rec2=[[],[]] of each horizontal wall)
+    if ll==None:
+        ll = []; rr = []
+        i = 1; j = len(OB_seq)
+        for x in OB_seq: 
+            if x == "B": 
+                ll+=[0]; rr+=[j]; j-=1
+            else:
+                ll+=[i]; i+=1; rr+=[0]
+    #------------------------------------
+    if len(OB_seq)==0: 
+        yield ([],[uu])
+        return 
+    for (rec,rec2) in hPD(uu,OB_seq[:-1],ll[:-1],rr[:-1]):
+        if OB_seq[-1] == "B": 
+            for (res_d,res_rec) in BPD_row(rec2[-1],rr[-1],ll[-1]):
+                yield (rec+[res_rec+["B"]],rec2+[res_d])
+        else: 
+            for (res_d,res_rec) in RC_row(rec2[-1],ll[-1],rr[-1]):
+                yield (rec+[res_rec+["O"]],rec2+[res_d])
+def hPD_boxdraw(xx):
+    n=len(xx[0]) # number of rows
+    m=len(xx[1][0]) # number of columns
+#     print(n,m)
+    res = ""
+    for i in range(n+1): 
+        this_line="+"
+        for j in range(m): 
+            k = xx[1][i][j]
+            if k ==0: 
+                this_line+="-"+"--"+"-+"
+            else:
+                this_line+="-"+["０","１","２","３","４","５","６","７","８","９","Ａ","Ｂ","Ｃ","Ｄ","Ｅ","Ｆ"][k]+"-+"
+        res+=this_line+"\n" 
+        if i<n:
+            this_line=""
+            for j in range(m+1):
+                k=xx[0][i][j]
+                tile = " "
+                if j<m:                     
+                    u = xx[1][i][j]; d = xx[1][i+1][j]
+                    l = xx[0][i][j]; r = xx[0][i][j+1]
+                    if u==d==l==r==0: 
+                        if xx[0][i][-1] == "B": tile = " ■ "
+                        else: tile = "    "
+                    if u==d==0 and l==r!=0: 
+                        if xx[0][i][-1] == "B": tile = "-─-"
+                        else: tile = "-━-"
+                    if u==d!=0 and l==r==0: 
+                        tile = " │ "
+                    if u==d!=0 and l==r!=0: 
+                        if xx[0][i][-1] == "B": tile = "-┼-"
+                        else: tile = "-╋-"
+                    if u==l!=0 and d==r==0: 
+                        tile = "-╯ "
+                    if u==l!=0 and d==r!=0: 
+                        tile = "╯╭"#╯̦
+                    if u==l==0 and d==r!=0: 
+                        tile = " ╭-"
+                    if u==r!=0 and d==l==0: 
+                        tile = " └-"#" ╰ "
+                    if u==r!=0 and d==l!=0: 
+                        tile = " ?? "
+                    if u==r==0 and d==l!=0: 
+                        tile = "-┐ " #" ╮ "
+                if k ==0: 
+                    this_line+="|"+tile
+                else:
+                    this_line+=["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"][k]+tile
+            this_line+="   "+(xx[0][i][-1])
+            res+=this_line+"\n" 
+#     if last_row: 
+        
+    return (res)
+    
+
+def hPD_weight(xx,double=False): 
+    n=len(xx[0]) # number of rows
+    m=len(xx[1][0]) # number of columns
+    res = [0]*n
+    if double:
+        res = [[0]*m]*n
+    for i in range(n): 
+        for j in range(m): 
+            u = xx[1][i][j]; d = xx[1][i+1][j]
+            l = xx[0][i][j]; r = xx[0][i][j+1]
+#             print(u,d,l,r,xx[0][i][-1])
+            if xx[0][i][-1] =="B": 
+                if u==d==l==r==0:
+                    if double:
+                        res[i][j] +=1
+                    else:
+                        res[i]+=1
+            else: 
+                if u==d and l==r!=0:
+                    if double:
+                        res[i][j] +=1
+                    else:
+                        res[i]+=1
+    return res
+
+def hPD_sortkey(xx,double=False):
+    wtt = hPD_weight(xx)
+    return (xx[1][-1],sum(wtt),hPD_weight(xx),hPD_weight(xx,True))
+# two rows
+def hPD_two_rows(uu,OB_seq,a,b): 
+    if OB_seq=="BO": 
+        for xx in hPD(uu,"BO",[0,a],[b,0]): yield xx
+    elif OB_seq=="OB": 
+        for xx in hPD(uu,"OB",[a,0],[0,b]): yield xx
+    elif OB_seq=="BB":
+        for xx in hPD(uu,"BB",[0,0],[b,a]): yield xx
+    elif OB_seq=="OO": 
+        for xx in hPD(uu,"OO",[a,b],[0,0]): yield xx
+    return 
+
+import random
+def randomOB(n): 
+    if n ==0:
+        return ""
+    return randomOB(n-1)+random.choice(["O","B"])
+def All_OB(n): 
+    if n ==0:
+        yield ""
+        return
+    for seq in All_OB(n-1):
+        yield seq+"O"
+        yield seq+"B"
+    return
+print("done")
+ </script>
+</div>
+
+
+<h2>Computation</h2>
+Choose n, the permutation and "OB"-sequence
+    <div class="compute"><script type="text/x-sage">
+n=6
+uu = [2,6,4,3,1,5]
+OB = "OBOBBO"
+# or 
+uu = list(Permutations(n).random_element())
+OB = randomOB(n)
+# OB = "O"*n
+# OB = "B"*n
+
+for xx in hPD(uu,OB):
+    print(hPD_boxdraw(xx))
+    print()
+</script></div>
+
+
+<h2>Two rows</h2>
+Choose n, a, b, the permutation and "OB"-sequence
+    <div class="compute"><script type="text/x-sage">
+n = 8
+(a,b) = (3,6)
+
+OB = "OB"
+# or 
+OB = "BO"
+
+uu = [0,3,5,0,4,0,6,0]
+# or 
+uu = list(Permutations(n).random_element())
+uu = [x if a<=x<=b else 0 for x in uu]
+
+rec = []
+for xx in hPD_two_rows(uu,OB,a,b):
+    rec.append(xx)
+for xx in sorted(rec,key=hPD_sortkey): 
+    print(hPD_boxdraw(xx))
+</script></div>

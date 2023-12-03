@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+
+<script src="https://sagecell.sagemath.org/static/embedded_sagecell.js"></script>
+<script>
+    sagecell.makeSagecell({inputLocation:  '#Activate',
+          template: sagecell.templates.minimal,
+          linked: true,
+          linkKey:"1",
+          autoeval:true,
+          hide:["fullScreen"],
+          evalButtonText: 'Activate'});
+    sagecell.makeSagecell({inputLocation: 'div.compute',
+          linked: true,
+          linkKey:"1",
+          hide:["permalinkpermalink","done","sessionFiles","fullScreen"], 
+          evalButtonText: 'Evaluate'});
+</script>
+
+
+<h2>Example</h2>
+
+<div id="Activate" visibility: hidden>
+  <script type="text/x-sage">
+def my_fun(x): 
+	print(x)
+print("done")
+# put your code
+  </script>
+</div>
+
+
+<h3>Computation</h3>
+
+
+
+<div class="compute">
+  <script type="text/x-sage">
+x="hello world"
+my_fun(x)
+  </script>
+ </div>
+
+<h3>Computation</h3>
+
+<div class="compute">
+  <script type="text/x-sage">
+my_fun(x+"!")
+  </script>
+</div>
+    
+<h3>Computation</h3>
+
+<div class="compute">
+  <script type="text/x-sage">
+Permutations(7).random_element()
+  </script>
+</div>
+
+
+<hr>
+<a href="/">home</a>
